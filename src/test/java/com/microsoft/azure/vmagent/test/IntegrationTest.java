@@ -46,8 +46,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -60,14 +60,17 @@ import static org.mockito.Mockito.when;
 
 /*
 To execute the integration tests you need to set the credentials env variables (the ones that don't have a default) and run mvn failsafe:integration-test
-*/
+ */
 public class IntegrationTest {
-    @ClassRule public static JenkinsRule j = new JenkinsRule();
-    @Rule public Timeout globalTimeout = Timeout.seconds(20 * 60); // integration tests are very slow
+
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(20 * 60); // integration tests are very slow
     private static final Logger LOGGER = Logger.getLogger(IntegrationTest.class.getName());
-    
 
     protected static class TestEnvironment {
+
         public final String subscriptionId;
         public final String clientId;
         public final String clientSecret;
@@ -84,7 +87,7 @@ public class IntegrationTest {
         public final String azureImageSku;
         public final String azureImageSize;
         public final Map<String, String> blobEndpointSuffixForTemplate;
-        public final Map<String,String> blobEndpointSuffixForCloudStorageAccount;
+        public final Map<String, String> blobEndpointSuffixForCloudStorageAccount;
         public final static String AZUREPUBLIC = "azure public";
         public final static String AZURECHINA = "azure china";
         public final static String AZUREUSGOVERMENT = "azure us goverment";
@@ -123,8 +126,7 @@ public class IntegrationTest {
             return TestEnvironment.loadFromEnv(name, "");
         }
 
-        private static String loadFromEnv(final String name, final String defaultValue)
-        {
+        private static String loadFromEnv(final String name, final String defaultValue) {
             final String value = System.getenv(name);
             if (value == null || value.isEmpty()) {
                 return defaultValue;
@@ -135,7 +137,7 @@ public class IntegrationTest {
 
         public static String GenerateRandomString(int length) {
             String uuid = UUID.randomUUID().toString();
-            return uuid.replaceAll("[^a-z0-9]","a").substring(0, length);
+            return uuid.replaceAll("[^a-z0-9]", "a").substring(0, length);
         }
     }
 
@@ -148,14 +150,14 @@ public class IntegrationTest {
         testEnv = new TestEnvironment();
         LOGGER.log(Level.INFO, "=========================== {0}", testEnv.azureResourceGroup);
         servicePrincipal = new ServicePrincipal(
-            testEnv.subscriptionId,
-            testEnv.clientId,
-            testEnv.clientSecret,
-            testEnv.oauth2TokenEndpoint,
-            testEnv.serviceManagementURL,
-            testEnv.authenticationEndpoint,
-            testEnv.resourceManagerEndpoint,
-            testEnv.graphEndpoint);
+                testEnv.subscriptionId,
+                testEnv.clientId,
+                testEnv.clientSecret,
+                testEnv.oauth2TokenEndpoint,
+                testEnv.serviceManagementURL,
+                testEnv.authenticationEndpoint,
+                testEnv.resourceManagerEndpoint,
+                testEnv.graphEndpoint);
         customTokenCache = TokenCache.getInstance(servicePrincipal);
         clearAzureResources();
     }
@@ -173,7 +175,7 @@ public class IntegrationTest {
                 LOGGER.log(Level.SEVERE, null, e);
             }
         }
-        
+
     }
 
     protected String downloadFromAzure(final String resourceGroup, final String storageAccountName, final String containerName, final String fileName) throws URISyntaxException, StorageException, IOException {
@@ -186,15 +188,15 @@ public class IntegrationTest {
         return blob.downloadText();
     }
 
-    protected boolean blobExists(final URI storageURI){
+    protected boolean blobExists(final URI storageURI) {
         try {
             final String storageAccountName = storageURI.getHost().split("\\.")[0];
             final String containerName = PathUtility.getContainerNameFromUri(storageURI, false);
             final String blobName = PathUtility.getBlobNameFromURI(storageURI, false);
 
             List<StorageAccountKey> storageKeys = customTokenCache.getAzureClient().storageAccounts()
-                .getByGroup(testEnv.azureResourceGroup, storageAccountName)
-                .getKeys();
+                    .getByGroup(testEnv.azureResourceGroup, storageAccountName)
+                    .getKeys();
 
             if (storageKeys.isEmpty()) {
                 return false;
@@ -204,19 +206,19 @@ public class IntegrationTest {
                 CloudBlobClient blobClient = account.createCloudBlobClient();
                 return blobClient.getContainerReference(containerName).getBlockBlobReference(blobName).exists();
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             return false;
         }
     }
 
-    protected boolean containerExists(final URI storageURI){
+    protected boolean containerExists(final URI storageURI) {
         try {
             final String storageAccountName = storageURI.getHost().split("\\.")[0];
             final String containerName = PathUtility.getContainerNameFromUri(storageURI, false);
 
             List<StorageAccountKey> storageKeys = customTokenCache.getAzureClient().storageAccounts()
-                .getByGroup(testEnv.azureResourceGroup, storageAccountName)
-                .getKeys();
+                    .getByGroup(testEnv.azureResourceGroup, storageAccountName)
+                    .getKeys();
 
             if (storageKeys.isEmpty()) {
                 return false;
@@ -226,7 +228,7 @@ public class IntegrationTest {
                 CloudBlobClient blobClient = account.createCloudBlobClient();
                 return blobClient.getContainerReference(containerName).exists();
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             return false;
         }
     }
@@ -234,7 +236,7 @@ public class IntegrationTest {
     protected AzureVMDeploymentInfo createDefaultDeployment(
             final int numberOfAgents,
             AzureVMAgentCleanUpTask.DeploymentRegistrar deploymentRegistrar
-            ) throws AzureCloudException, IOException, Exception {
+    ) throws AzureCloudException, IOException, Exception {
         return createDefaultDeployment(numberOfAgents, true, deploymentRegistrar);
     }
 
@@ -242,7 +244,7 @@ public class IntegrationTest {
             final int numberOfAgents,
             final boolean usePrivateIP,
             AzureVMAgentCleanUpTask.DeploymentRegistrar deploymentRegistrar
-            ) throws AzureCloudException, IOException, Exception {
+    ) throws AzureCloudException, IOException, Exception {
         final String templateName = "t" + TestEnvironment.GenerateRandomString(7);
         final String osType = Constants.OS_TYPE_LINUX;
         final String initScript = "echo \"" + UUID.randomUUID().toString() + "\"";
@@ -276,15 +278,15 @@ public class IntegrationTest {
         when(templateMock.getAzureCloud()).thenReturn(mock(AzureVMCloud.class));
         when(templateMock.getUsePrivateIP()).thenReturn(!usePrivateIP);
 
-        AzureVMDeploymentInfo ret = AzureVMManagementServiceDelegate.createDeployment(templateMock, numberOfAgents, customTokenCache,deploymentRegistrar);
+        AzureVMDeploymentInfo ret = AzureVMManagementServiceDelegate.createDeployment(templateMock, numberOfAgents, customTokenCache, deploymentRegistrar);
         List<String> vmNames = new ArrayList<>();
-        for(int i = 0; i< numberOfAgents; i++) {
+        for (int i = 0; i < numberOfAgents; i++) {
             vmNames.add(ret.getVmBaseName() + String.valueOf(i));
         }
 
         //wait for deployment to complete
         final int maxTries = 20; //wait 10 minutes
-        for(int i = 0; i < maxTries; i++) {
+        for (int i = 0; i < maxTries; i++) {
             if (areAllVMsDeployed(vmNames)) {
                 return ret;
             }
@@ -297,10 +299,10 @@ public class IntegrationTest {
         }
         throw new Exception("Deployment is not completed after 10 minutes");
     }
-    
+
     protected boolean areAllVMsDeployed(final List<String> vmNames) {
         int deployedVMs = 0;
-        PagedList<Deployment> deployments= customTokenCache.getAzureClient().deployments().listByGroup(testEnv.azureResourceGroup);
+        PagedList<Deployment> deployments = customTokenCache.getAzureClient().deployments().listByGroup(testEnv.azureResourceGroup);
         for (Deployment dep : deployments) {
             PagedList<DeploymentOperation> ops = dep.deploymentOperations().list();
             for (DeploymentOperation op : ops) {
@@ -311,13 +313,12 @@ public class IntegrationTest {
                 final String state = op.provisioningState();
                 if (op.targetResource().resourceType().contains("virtualMachine")) {
                     if (!state.equalsIgnoreCase("creating")
-                        && !state.equalsIgnoreCase("succeeded")
-                        && !state.equalsIgnoreCase("running")){
+                            && !state.equalsIgnoreCase("succeeded")
+                            && !state.equalsIgnoreCase("running")) {
                         return false;
-                    }
-                    else if (state.equalsIgnoreCase("succeeded")) {
-                        for(String vmName: vmNames) {
-                            if(resource.equalsIgnoreCase(vmName)) {
+                    } else if (state.equalsIgnoreCase("succeeded")) {
+                        for (String vmName : vmNames) {
+                            if (resource.equalsIgnoreCase(vmName)) {
                                 deployedVMs++;
                                 break;
                             }
@@ -334,6 +335,7 @@ public class IntegrationTest {
     protected VirtualMachine createAzureVM(final String vmName) throws CloudException, IOException {
         return createAzureVM(vmName, "JenkinsTag", "testing");
     }
+
     protected VirtualMachine createAzureVM(final String vmName, final String tagName, final String tagValue) throws CloudException, IOException {
         return customTokenCache.getAzureClient().virtualMachines()
                 .define(vmName)
@@ -353,18 +355,18 @@ public class IntegrationTest {
 
     protected URI uploadFile(final String uploadFileName, final String writtenData, final String containerName) throws Exception {
         customTokenCache.getAzureClient().resourceGroups()
-            .define(testEnv.azureResourceGroup)
-            .withRegion(testEnv.azureLocation)
-            .create();
+                .define(testEnv.azureResourceGroup)
+                .withRegion(testEnv.azureLocation)
+                .create();
         customTokenCache.getAzureClient().storageAccounts().define(testEnv.azureStorageAccountName)
-            .withRegion(testEnv.azureLocation)
-            .withExistingResourceGroup(testEnv.azureResourceGroup)
-            .withSku(SkuName.STANDARD_LRS)
-            .create();
+                .withRegion(testEnv.azureLocation)
+                .withExistingResourceGroup(testEnv.azureResourceGroup)
+                .withSku(SkuName.STANDARD_LRS)
+                .create();
         List<StorageAccountKey> storageKeys = customTokenCache.getAzureClient().storageAccounts()
-            .getByGroup(testEnv.azureResourceGroup, testEnv.azureStorageAccountName)
-            .getKeys();
-        if(storageKeys.isEmpty()) {
+                .getByGroup(testEnv.azureResourceGroup, testEnv.azureStorageAccountName)
+                .getKeys();
+        if (storageKeys.isEmpty()) {
             throw new Exception("Can't find key");
         }
 

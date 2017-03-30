@@ -1,12 +1,12 @@
 /*
  Copyright 2016 Microsoft, Inc.
- 
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
- 
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,6 @@
 package com.microsoft.azure.vmagent.util;
 
 import com.microsoft.rest.LogLevel;
-import okhttp3.logging.HttpLoggingInterceptor;
 
 public class Constants {
 
@@ -41,13 +40,13 @@ public class Constants {
     public static final String BASE_URI_SUFFIX = ".core.windows.net/";
 
     public static final String FWD_SLASH = "/";
-    
+
     public static final String BLOB_ENDPOINT_SUFFIX_STARTKEY = "core";
-    
+
     public static final String BLOB_ENDPOINT_PREFIX = ".";
 
     public static final int DEFAULT_MAX_VM_LIMIT = 10;
-    
+
     public static final int DEFAULT_DEPLOYMENT_TIMEOUT_SEC = 1200;
 
     public static final int DEFAULT_IDLE_TIME = 60;
@@ -68,26 +67,36 @@ public class Constants {
 
     public static final String STORAGE_ACCOUNT_PREFIX = "jenkins";
 
-    /** OS Types */
+    /**
+     * OS Types
+     */
     public static final String OS_TYPE_WINDOWS = "Windows";
 
     public static final String OS_TYPE_LINUX = "Linux";
-    
-    /** Usage types for template names **/
+
+    /**
+     * Usage types for template names *
+     */
     public static final String USAGE_TYPE_DEPLOYMENT = "Deployment";
-    
-    /** VM/Deployment name date formats **/
+
+    /**
+     * VM/Deployment name date formats *
+     */
     public static final int VM_NAME_HASH_LENGTH = 6;
     public static final String DEPLOYMENT_NAME_DATE_FORMAT = "MMddHHmmssSSS";
 
-    /** Agent launch methods */
+    /**
+     * Agent launch methods
+     */
     public static final String LAUNCH_METHOD_JNLP = "JNLP";
 
     public static final String LAUNCH_METHOD_SSH = "SSH";
 
     public static final int MAX_PROV_RETRIES = 20;
 
-    /** Error codes */
+    /**
+     * Error codes
+     */
     public static final String ERROR_CODE_RESOURCE_NF = "ResourceNotFound";
 
     public static final String ERROR_CODE_CONFLICT = "ConflictError";
@@ -100,17 +109,23 @@ public class Constants {
 
     public static final String ERROR_CODE_UNKNOWN_HOST = "UnknownHostException";
 
-    /** End points */
+    /**
+     * End points
+     */
     public static final String PROTOCOL_TCP = "tcp";
 
     public static final String EP_SSH_NAME = "ssh";
 
     public static final String EP_RDP_NAME = "rdp";
 
-    /** Status messages */
+    /**
+     * Status messages
+     */
     public static final String OP_SUCCESS = "Success";
 
-    /** Provisioning failure reasons */
+    /**
+     * Provisioning failure reasons
+     */
     public static final String JNLP_POST_PROV_LAUNCH_FAIL
             = "Provisioning Failure: JNLP agent failed to connect. Make sure that "
             + "agent node is able to reach master and necessary firewall rules are configured";
@@ -128,28 +143,36 @@ public class Constants {
 
     public static final String REG_EX_DIGIT = "\\d+";
 
-    /** Role Status */
+    /**
+     * Role Status
+     */
     public static final String PROVISIONING_OR_DEPROVISIONING_VM_STATUS = "PROVISIONING_OR_DEPROVISIONING";
 
     public static final String DEFAULT_RESOURCE_GROUP_NAME = "jenkins";
 
     public static final String DEFAULT_VNET_ADDRESS_MASK = "10.0.0.0/16";
-    
+
     public static final String DEFAULT_SUBNET_ADDRESS_MASK = "10.0.0.0/24";
-    
+
     public static final String DEFAULT_VNET_NAME = "jenkinsarm-vnet";
-    
+
     public static final String DEFAULT_SUBNET_NAME = "jenkinsarm-snet";
-    
+
     public static final String DEFAULT_RESOURCE_GROUP_PATTERN = "^[a-zA-Z0-9][a-zA-Z\\-_0-9]{0,62}[a-zA-Z0-9]$";
-    
+
     public static final LogLevel DEFAULT_AZURE_SDK_LOGGING_LEVEL = LogLevel.NONE;
-    
+
     public static final String AZURE_JENKINS_TAG_NAME = "JenkinsManagedTag";
-    
+
     public static final String AZURE_JENKINS_TAG_VALUE = "ManagedByAzureVMAgents";
-    
+
     public static final String AZURE_RESOURCES_TAG_NAME = "JenkinsResourceTag";
-    
+
     public static final long AZURE_DEPLOYMENT_TIMEOUT = 2 * 60 * 60;//in seconds
+
+    public static final long AZURE_DEFAULT_WAIT_TIME_SECONDS_AFTER_VM_START = 30;
+
+    public static final long JNLP_MAX_WAIT_CONNECT_TIME_MINUTES = 30;
+
+    public static final long CLOUD_VERIFICATION_PERIOD_MINUTES = 5;
 }

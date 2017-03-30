@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.microsoft.azure.vmagent.test;
 
 import com.microsoft.azure.vmagent.AzureVMAgent;
@@ -40,7 +39,7 @@ public class ITAzureVMCloud extends IntegrationTest {
             final String vmName = "fakeVM";
             final String deploymentName = "fakeDeployment";
             AzureVMAgentTemplate templateMock = mock(AzureVMAgentTemplate.class);
-            AzureVMCloud cloudMock = spy( new AzureVMCloud(servicePrincipal, "xyz", "42", "0", testEnv.azureResourceGroup, null));
+            AzureVMCloud cloudMock = spy(new AzureVMCloud(servicePrincipal, "xyz", "42", "0", testEnv.azureResourceGroup, null));
 
             when(templateMock.getAzureCloud()).thenReturn(cloudMock);
             when(cloudMock.getServicePrincipal()).thenReturn(servicePrincipal);
@@ -81,7 +80,7 @@ public class ITAzureVMCloud extends IntegrationTest {
             final boolean doNotUseMachineIfInitFails = true;
 
             AzureVMAgentTemplate templateMock = mock(AzureVMAgentTemplate.class);
-            AzureVMCloud cloudMock = spy( new AzureVMCloud(servicePrincipal, credentialsId, "42", "30", testEnv.azureResourceGroup, null));
+            AzureVMCloud cloudMock = spy(new AzureVMCloud(servicePrincipal, credentialsId, "42", "30", testEnv.azureResourceGroup, null));
 
             when(cloudMock.getServicePrincipal()).thenReturn(servicePrincipal);
             when(templateMock.getAzureCloud()).thenReturn(cloudMock);

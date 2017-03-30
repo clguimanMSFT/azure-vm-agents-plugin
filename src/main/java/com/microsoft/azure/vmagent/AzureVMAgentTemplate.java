@@ -1,12 +1,12 @@
 /*
  Copyright 2016 Microsoft, Inc.
- 
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
- 
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,53 +19,47 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
-import com.microsoft.azure.vmagent.Messages;
 import com.microsoft.azure.util.AzureCredentials;
 import com.microsoft.azure.util.AzureCredentials.ServicePrincipal;
 import com.microsoft.azure.vmagent.exceptions.AzureCloudException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Logger;
-
-import javax.servlet.ServletException;
-
-import jenkins.model.Jenkins;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-
 import com.microsoft.azure.vmagent.util.AzureUtil;
 import com.microsoft.azure.vmagent.util.Constants;
 import com.microsoft.azure.vmagent.util.FailureStage;
-
 import hudson.Extension;
 import hudson.RelativePath;
 import hudson.model.Describable;
-import hudson.model.TaskListener;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.Label;
 import hudson.model.Node;
+import hudson.model.TaskListener;
 import hudson.model.labels.LabelAtom;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+
+import javax.servlet.ServletException;
+import javax.xml.bind.DatatypeConverter;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
-import javax.xml.bind.DatatypeConverter;
-import org.apache.commons.lang.StringUtils;
-import org.kohsuke.stapler.AncestorInPath;
+import java.util.logging.Logger;
 
 /**
  * This class defines the configuration of Azure instance templates
  *
  * @author Suresh Nallamilli
- *
  */
 public class AzureVMAgentTemplate implements Describable<AzureVMAgentTemplate> {
 
@@ -186,7 +180,7 @@ public class AzureVMAgentTemplate implements Describable<AzureVMAgentTemplate> {
 
         if (StringUtils.isBlank(noOfParallelJobs) || !noOfParallelJobs.matches(Constants.REG_EX_DIGIT)
                 || noOfParallelJobs.
-                        trim().equals("0")) {
+                trim().equals("0")) {
             this.noOfParallelJobs = 1;
         } else {
             this.noOfParallelJobs = Integer.parseInt(noOfParallelJobs);
@@ -225,11 +219,15 @@ public class AzureVMAgentTemplate implements Describable<AzureVMAgentTemplate> {
         readResolve();
     }
 
-    public String isType(final String type) {
-        if(this.imageReferenceType == null && type.equals("reference")) {
+    public final String isType(final String type) {
+        if (this.imageReferenceType == null && type.equals("reference")) {
             return "true";
         }
-        return type != null && type.equalsIgnoreCase(this.imageReferenceType) ? "true" : "false";
+        if (type != null && type.equalsIgnoreCase(this.imageReferenceType)) {
+            return "true";
+        } else {
+            return "false";
+        }
     }
 
     private Object readResolve() {
@@ -237,38 +235,41 @@ public class AzureVMAgentTemplate implements Describable<AzureVMAgentTemplate> {
         return this;
     }
 
-    public String getLabels() {
+    public final String getLabels() {
         return labels;
     }
 
-    public String getLocation() {
+    public final String getLocation() {
         return location;
     }
 
-    public String getVirtualMachineSize() {
+    public final String getVirtualMachineSize() {
         return virtualMachineSize;
     }
 
-
-    public String getStorageAccountName() {
+    public final String getStorageAccountName() {
         return storageAccountName;
     }
 
-    public void setStorageAccountName(final String storageAccountName) {
+    public final void setStorageAccountName(final String storageAccountName) {
         this.storageAccountName = storageAccountName;
     }
 
-    public Node.Mode getUseAgentAlwaysIfAvail() {
-        return (usageMode == null) ? Node.Mode.NORMAL : usageMode;
+    public final Node.Mode getUseAgentAlwaysIfAvail() {
+        if (usageMode == null) {
+            return Node.Mode.NORMAL;
+        } else {
+            return usageMode;
+        }
     }
 
-    public String getUsageMode() {
+    public final String getUsageMode() {
         return getUseAgentAlwaysIfAvail().getDescription();
     }
 
-    public void setUsageMode(final String mode) {
+    public final void setUsageMode(final String mode) {
         Node.Mode val = Node.Mode.NORMAL;
-        for(Node.Mode m : hudson.Functions.getNodeModes()) {
+        for (Node.Mode m : hudson.Functions.getNodeModes()) {
             if (mode.equalsIgnoreCase(m.getDescription())) {
                 val = m;
                 break;
@@ -277,117 +278,117 @@ public class AzureVMAgentTemplate implements Describable<AzureVMAgentTemplate> {
         this.usageMode = val;
     }
 
-    public boolean isShutdownOnIdle() {
+    public final boolean isShutdownOnIdle() {
         return shutdownOnIdle;
     }
 
-    public String getImageReferenceType() {
+    public final String getImageReferenceType() {
         return imageReferenceType;
     }
 
-    public String getImage() {
+    public final String getImage() {
         return image;
     }
 
-    public String getOsType() {
+    public final String getOsType() {
         return osType;
     }
 
-    public String getImagePublisher() {
+    public final String getImagePublisher() {
         return imagePublisher;
     }
 
-    public String getImageOffer() {
+    public final String getImageOffer() {
         return imageOffer;
     }
 
-    public String getImageSku() {
+    public final String getImageSku() {
         return imageSku;
     }
 
-    public String getImageVersion() {
+    public final String getImageVersion() {
         return imageVersion;
     }
 
-    public String getInitScript() {
+    public final String getInitScript() {
         return initScript;
     }
 
-    public String getCredentialsId() {
+    public final String getCredentialsId() {
         return credentialsId;
     }
 
-    public StandardUsernamePasswordCredentials getVMCredentials() throws AzureCloudException {
+    public final StandardUsernamePasswordCredentials getVMCredentials() throws AzureCloudException {
         return AzureUtil.getCredentials(credentialsId);
     }
 
-    public String getVirtualNetworkName() {
+    public final String getVirtualNetworkName() {
         return virtualNetworkName;
     }
 
-    public void setVirtualNetworkName(String virtualNetworkName) {
+    public final void setVirtualNetworkName(final String virtualNetworkName) {
         this.virtualNetworkName = virtualNetworkName;
     }
 
-    public String getSubnetName() {
+    public final getSubnetName() {
         return subnetName;
     }
 
-    public void setSubnetName(String subnetName) {
+    public final void setSubnetName(final String subnetName) {
         this.subnetName = subnetName;
     }
-    
-    public boolean getUsePrivateIP() {
+
+    public final boolean getUsePrivateIP() {
         return usePrivateIP;
     }
 
-    public String getAgentWorkspace() {
+    public final String getAgentWorkspace() {
         return agentWorkspace;
     }
 
-    public int getRetentionTimeInMin() {
+    public final int getRetentionTimeInMin() {
         return retentionTimeInMin;
     }
 
-    public String getJvmOptions() {
+    public final String getJvmOptions() {
         return jvmOptions;
     }
 
-    public AzureVMCloud getAzureCloud() {
+    public final AzureVMCloud getAzureCloud() {
         return azureCloud;
     }
 
-    public void setAzureCloud(AzureVMCloud cloud) {
+    public final void setAzureCloud(final AzureVMCloud cloud) {
         azureCloud = cloud;
         if (StringUtils.isBlank(storageAccountName)) {
-            storageAccountName = AzureVMAgentTemplate.generateUniqueStorageAccountName(azureCloud.getResourceGroupName(), azureCloud.getServicePrincipal());
-            
+            storageAccountName = AzureVMAgentTemplate.generateUniqueStorageAccountName(
+                    azureCloud.getResourceGroupName(),
+                    azureCloud.getServicePrincipal());
         }
     }
 
-    public String getTemplateName() {
+    public final String getTemplateName() {
         return templateName;
     }
 
-    public String getTemplateDesc() {
+    public final String getTemplateDesc() {
         return templateDesc;
     }
 
-    public int getNoOfParallelJobs() {
+    public final int getNoOfParallelJobs() {
         return noOfParallelJobs;
     }
 
-    public String getAgentLaunchMethod() {
+    public final String getAgentLaunchMethod() {
         return agentLaunchMethod;
     }
 
     /**
-     * Returns true if this template is disabled and cannot be used, false
-     * otherwise.
+     * Returns true if this template is disabled and cannot be used, false otherwise.
      *
      * @return True/false
      */
-    public boolean isTemplateDisabled() {
+    public final boolean isTemplateDisabled() {
         return this.templateDisabled;
     }
 
@@ -396,7 +397,7 @@ public class AzureVMAgentTemplate implements Describable<AzureVMAgentTemplate> {
      *
      * @return True if the template is set up and verified, false otherwise.
      */
-    public boolean isTemplateVerified() {
+    public final boolean isTemplateVerified() {
         return templateVerified;
     }
 
@@ -405,45 +406,45 @@ public class AzureVMAgentTemplate implements Describable<AzureVMAgentTemplate> {
      *
      * @param isValid True for verified + valid, false otherwise.
      */
-    public void setTemplateVerified(boolean isValid) {
+    public final void setTemplateVerified(final boolean isValid) {
         templateVerified = isValid;
     }
 
-    public String getTemplateStatusDetails() {
+    public final String getTemplateStatusDetails() {
         return templateStatusDetails;
     }
 
-    public void setTemplateStatusDetails(String templateStatusDetails) {
+    public final void setTemplateStatusDetails(final String templateStatusDetails) {
         this.templateStatusDetails = templateStatusDetails;
     }
 
-    public String getResourceGroupName() {
+    public final String getResourceGroupName() {
         // Allow overriding?
         return getAzureCloud().getResourceGroupName();
     }
 
-    public boolean getExecuteInitScriptAsRoot() {
+    public final boolean getExecuteInitScriptAsRoot() {
         return executeInitScriptAsRoot;
     }
 
-    public void setExecuteInitScriptAsRoot(boolean executeAsRoot) {
+    public final void setExecuteInitScriptAsRoot(final boolean executeAsRoot) {
         executeInitScriptAsRoot = executeAsRoot;
     }
 
-    public boolean getDoNotUseMachineIfInitFails() {
+    public final boolean getDoNotUseMachineIfInitFails() {
         return doNotUseMachineIfInitFails;
     }
 
-    public void setDoNotUseMachineIfInitFails(boolean doNotUseMachineIfInitFails) {
+    public final void setDoNotUseMachineIfInitFails(final boolean doNotUseMachineIfInitFails) {
         this.doNotUseMachineIfInitFails = doNotUseMachineIfInitFails;
     }
 
     @SuppressWarnings("unchecked")
-    public Descriptor<AzureVMAgentTemplate> getDescriptor() {
+    public final Descriptor<AzureVMAgentTemplate> getDescriptor() {
         return Jenkins.getInstance().getDescriptor(getClass());
     }
 
-    public Set<LabelAtom> getLabelDataSet() {
+    public final Set<LabelAtom> getLabelDataSet() {
         return labelDataSet;
     }
 
@@ -455,18 +456,19 @@ public class AzureVMAgentTemplate implements Describable<AzureVMAgentTemplate> {
      * @return New deployment info if the provisioning was successful.
      * @throws Exception May throw if provisioning was not successful.
      */
-    public AzureVMDeploymentInfo provisionAgents(final TaskListener listener, int numberOfAgents) throws Exception {
+    public final AzureVMDeploymentInfo provisionAgents(
+            final TaskListener listener,
+            final int numberOfAgents) throws Exception {
         return AzureVMManagementServiceDelegate.createDeployment(this, numberOfAgents);
     }
 
     /**
-     * If provisioning failed, handle the status and queue the template for
-     * verification.
+     * If provisioning failed, handle the status and queue the template for verification.
      *
-     * @param message Failure message
+     * @param message     Failure message
      * @param failureStep Stage that failure occurred
      */
-    public void handleTemplateProvisioningFailure(final String message, final FailureStage failureStep) {
+    public final void handleTemplateProvisioningFailure(final String message, final FailureStage failureStep) {
         // The template is bad.  It should have already been verified, but
         // perhaps something changed (VHD gone, etc.).  Queue for verification.
         setTemplateVerified(false);
@@ -475,13 +477,25 @@ public class AzureVMAgentTemplate implements Describable<AzureVMAgentTemplate> {
         setTemplateStatusDetails(message);
     }
 
+    private ImageReferenceType getImgReferenceType() {
+        if (imageReferenceType == null) {
+            return ImageReferenceType.UNKNOWN;
+        } else {
+            if (imageReferenceType.equals("custom")) {
+                return ImageReferenceType.CUSTOM;
+            } else {
+                return ImageReferenceType.REFERENCE;
+            }
+        }
+    }
+
     /**
      * Verify that this template is correct and can be allocated.
      *
      * @return Empty list if this template is valid, list of errors otherwise
      * @throws Exception
      */
-    public List<String> verifyTemplate() throws Exception {
+    public final List<String> verifyTemplate() throws Exception {
         return AzureVMManagementServiceDelegate.verifyTemplate(azureCloud.getServicePrincipal(),
                 templateName,
                 labels,
@@ -489,7 +503,7 @@ public class AzureVMAgentTemplate implements Describable<AzureVMAgentTemplate> {
                 virtualMachineSize,
                 storageAccountName,
                 noOfParallelJobs + "",
-                (imageReferenceType == null) ? ImageReferenceType.UNKNOWN : ( imageReferenceType.equals("custom") ? ImageReferenceType.CUSTOM : ImageReferenceType.REFERENCE),
+                getImgReferenceType(),
                 image,
                 osType,
                 imagePublisher,
@@ -521,7 +535,8 @@ public class AzureVMAgentTemplate implements Describable<AzureVMAgentTemplate> {
                 @QueryParameter final String location)
                 throws IOException, ServletException {
 
-            AzureCredentials.ServicePrincipal servicePrincipal = AzureCredentials.getServicePrincipal(azureCredentialsId);
+            AzureCredentials.ServicePrincipal servicePrincipal
+                    = AzureCredentials.getServicePrincipal(azureCredentialsId);
             ListBoxModel model = new ListBoxModel();
             List<String> vmSizes = AzureVMManagementServiceDelegate.getVMSizes(servicePrincipal, location);
 
@@ -533,11 +548,20 @@ public class AzureVMAgentTemplate implements Describable<AzureVMAgentTemplate> {
             return model;
         }
 
-        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item owner) {
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath final Item owner) {
             // when configuring the job, you only want those credentials that are available to ACL.SYSTEM selectable
             // as we cannot select from a user's credentials unless they are the only user submitting the build
             // (which we cannot assume) thus ACL.SYSTEM is correct here.
-            return new StandardListBoxModel().withAll(CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class, owner, ACL.SYSTEM, Collections.<DomainRequirement>emptyList()));
+            return new StandardListBoxModel()
+                    .withAll(
+                            CredentialsProvider
+                                    .lookupCredentials(
+                                            StandardUsernamePasswordCredentials.class,
+                                            owner,
+                                            ACL.SYSTEM,
+                                            Collections.<DomainRequirement>emptyList()
+                                    )
+                    );
         }
 
         public ListBoxModel doFillOsTypeItems() throws IOException, ServletException {
@@ -550,7 +574,8 @@ public class AzureVMAgentTemplate implements Describable<AzureVMAgentTemplate> {
         public ListBoxModel doFillLocationItems(
                 @RelativePath("..") @QueryParameter final String azureCredentialsId)
                 throws IOException, ServletException {
-            AzureCredentials.ServicePrincipal servicePrincipal = AzureCredentials.getServicePrincipal(azureCredentialsId);
+            AzureCredentials.ServicePrincipal servicePrincipal
+                    = AzureCredentials.getServicePrincipal(azureCredentialsId);
 
             ListBoxModel model = new ListBoxModel();
 
@@ -562,10 +587,10 @@ public class AzureVMAgentTemplate implements Describable<AzureVMAgentTemplate> {
 
             return model;
         }
-        
+
         public ListBoxModel doFillUsageModeItems() throws IOException, ServletException {
             ListBoxModel model = new ListBoxModel();
-            for(Node.Mode m : hudson.Functions.getNodeModes()) {
+            for (Node.Mode m : hudson.Functions.getNodeModes()) {
                 model.add(m.getDescription());
             }
             return model;
@@ -603,12 +628,11 @@ public class AzureVMAgentTemplate implements Describable<AzureVMAgentTemplate> {
         }
 
         /**
-         * Check the template's name. Name must conform to restrictions on VM
-         * naming
+         * Check the template's name. Name must conform to restrictions on VM naming
          *
-         * @param value Current name
+         * @param value            Current name
          * @param templateDisabled Is the template disabled
-         * @param osType OS type
+         * @param osType           OS type
          * @return
          */
         public FormValidation doCheckTemplateName(
@@ -681,102 +705,118 @@ public class AzureVMAgentTemplate implements Describable<AzureVMAgentTemplate> {
         }
 
         public FormValidation doVerifyConfiguration(
-                @RelativePath("..") @QueryParameter String azureCredentialsId,
-                @RelativePath("..") @QueryParameter String resourceGroupName,
-                @RelativePath("..") @QueryParameter String maxVirtualMachinesLimit,
-                @RelativePath("..") @QueryParameter String deploymentTimeout,
-                @QueryParameter String templateName,
-                @QueryParameter String labels,
-                @QueryParameter String location,
-                @QueryParameter String virtualMachineSize,
-                @QueryParameter String storageAccountName,
-                @QueryParameter String noOfParallelJobs,
-                @QueryParameter String image,
-                @QueryParameter String osType,
-                @QueryParameter String imagePublisher,
-                @QueryParameter String imageOffer,
-                @QueryParameter String imageSku,
-                @QueryParameter String imageVersion,
-                @QueryParameter String agentLaunchMethod,
-                @QueryParameter String initScript,
-                @QueryParameter String credentialsId,
-                @QueryParameter String virtualNetworkName,
-                @QueryParameter String subnetName,
-                @QueryParameter boolean usePrivateIP,
-                @QueryParameter String retentionTimeInMin,
-                @QueryParameter String jvmOptions,
-                @QueryParameter String imageReferenceType) {
+                @RelativePath("..") @QueryParameter final String azureCredentialsId,
+                @RelativePath("..") @QueryParameter final String resourceGroupName,
+                @RelativePath("..") @QueryParameter final String maxVirtualMachinesLimit,
+                @RelativePath("..") @QueryParameter final String deploymentTimeout,
+                @QueryParameter final String templateName,
+                @QueryParameter final String labels,
+                @QueryParameter final String location,
+                @QueryParameter final String virtualMachineSize,
+                @QueryParameter final String storageAccountName,
+                @QueryParameter final String noOfParallelJobs,
+                @QueryParameter final String image,
+                @QueryParameter final String osType,
+                @QueryParameter final String imagePublisher,
+                @QueryParameter final String imageOffer,
+                @QueryParameter final String imageSku,
+                @QueryParameter final String imageVersion,
+                @QueryParameter final String agentLaunchMethod,
+                @QueryParameter final String initScript,
+                @QueryParameter final String credentialsId,
+                @QueryParameter final String virtualNetworkName,
+                @QueryParameter final String subnetName,
+                @QueryParameter final boolean usePrivateIP,
+                @QueryParameter final String retentionTimeInMin,
+                @QueryParameter final String jvmOptions,
+                @QueryParameter final String imageReferenceType) {
 
             /*
-            imageReferenceType will not be passed to doVerifyConfiguration unless Jenkins core has https://github.com/jenkinsci/jenkins/pull/2734
+            imageReferenceType will not be passed to doVerifyConfiguration unless Jenkins core has
+             https://github.com/jenkinsci/jenkins/pull/2734
             The plugin should be able to run in both modes.
-            */
+             */
             ImageReferenceType referenceType = ImageReferenceType.UNKNOWN;
             if (imageReferenceType != null) {
-                referenceType = imageReferenceType.equals("custom") ? ImageReferenceType.CUSTOM : ImageReferenceType.REFERENCE;
+                if (imageReferenceType.equals("custom")) {
+                    referenceType = ImageReferenceType.CUSTOM;
+                } else {
+                    referenceType = ImageReferenceType.REFERENCE;
+                }
             }
 
-            AzureCredentials.ServicePrincipal servicePrincipal = AzureCredentials.getServicePrincipal(azureCredentialsId);
-            if(storageAccountName.trim().isEmpty())
-                storageAccountName = AzureVMAgentTemplate.generateUniqueStorageAccountName(resourceGroupName, servicePrincipal);
-
+            AzureCredentials.ServicePrincipal servicePrincipal
+                    = AzureCredentials.getServicePrincipal(azureCredentialsId);
+            if (storageAccountName.trim().isEmpty()) {
+                storageAccountName = AzureVMAgentTemplate.generateUniqueStorageAccountName(
+                        resourceGroupName,
+                        servicePrincipal);
+            }
+            String hiddenClientId = null;
+            String hiddenClientSecret = null;
+            if (StringUtils.isNotBlank(servicePrincipal.getClientId())) {
+                hiddenClientId = "********";
+            }
+            if (StringUtils.isNotBlank(servicePrincipal.getClientSecret())) {
+                hiddenClientSecret = "********";
+            }
             LOGGER.log(Level.INFO,
                     "Verify configuration:\n\t"
-                    + "subscriptionId: {0};\n\t"
-                    + "clientId: {1};\n\t"
-                    + "clientSecret: {2};\n\t"
-                    + "serviceManagementURL: {3};\n\t"
-                    + "resourceGroupName: {4};\n\t."
-                    + "templateName: {5};\n\t"
-                    + "labels: {6};\n\t"
-                    + "location: {7};\n\t"
-                    + "virtualMachineSize: {8};\n\t"
-                    + "storageAccountName: {9};\n\t"
-                    + "noOfParallelJobs: {10};\n\t"
-                    + "image: {11};\n\t"
-                    + "osType: {12};\n\t"
-                    + "imagePublisher: {13};\n\t"
-                    + "imageOffer: {14};\n\t"
-                    + "imageSku: {15};\n\t"
-                    + "imageVersion: {16};\n\t"
-                    + "agentLaunchMethod: {17};\n\t"
-                    + "initScript: {18};\n\t"
-                    + "credentialsId: {19};\n\t"
-                    + "virtualNetworkName: {20};\n\t"
-                    + "subnetName: {21};\n\t"
-                    + "privateIP: {22};\n\t"
-                    + "retentionTimeInMin: {23};\n\t"
-                    + "jvmOptions: {24};",
+                            + "subscriptionId: {0};\n\t"
+                            + "clientId: {1};\n\t"
+                            + "clientSecret: {2};\n\t"
+                            + "serviceManagementURL: {3};\n\t"
+                            + "resourceGroupName: {4};\n\t."
+                            + "templateName: {5};\n\t"
+                            + "labels: {6};\n\t"
+                            + "location: {7};\n\t"
+                            + "virtualMachineSize: {8};\n\t"
+                            + "storageAccountName: {9};\n\t"
+                            + "noOfParallelJobs: {10};\n\t"
+                            + "image: {11};\n\t"
+                            + "osType: {12};\n\t"
+                            + "imagePublisher: {13};\n\t"
+                            + "imageOffer: {14};\n\t"
+                            + "imageSku: {15};\n\t"
+                            + "imageVersion: {16};\n\t"
+                            + "agentLaunchMethod: {17};\n\t"
+                            + "initScript: {18};\n\t"
+                            + "credentialsId: {19};\n\t"
+                            + "virtualNetworkName: {20};\n\t"
+                            + "subnetName: {21};\n\t"
+                            + "privateIP: {22};\n\t"
+                            + "retentionTimeInMin: {23};\n\t"
+                            + "jvmOptions: {24};",
                     new Object[]{
-                        servicePrincipal.getSubscriptionId(),
-                        (StringUtils.isNotBlank(servicePrincipal.getClientId()) ? "********" : null),
-                        (StringUtils.isNotBlank(servicePrincipal.getClientSecret()) ? "********" : null),
-                        servicePrincipal.getServiceManagementURL(),
-                        resourceGroupName,
-                        templateName,
-                        labels,
-                        location,
-                        virtualMachineSize,
-                        storageAccountName,
-                        noOfParallelJobs,
-                        image,
-                        osType,
-                        imagePublisher,
-                        imageOffer,
-                        imageSku,
-                        imageVersion,
-                        agentLaunchMethod,
-                        initScript,
-                        credentialsId,
-                        virtualNetworkName,
-                        subnetName,
-                        usePrivateIP,
-                        retentionTimeInMin,
-                        jvmOptions});
+                            servicePrincipal.getSubscriptionId(),
+                            hiddenClientId,
+                            hiddenClientSecret,
+                            servicePrincipal.getServiceManagementURL(),
+                            resourceGroupName,
+                            templateName,
+                            labels,
+                            location,
+                            virtualMachineSize,
+                            storageAccountName,
+                            noOfParallelJobs,
+                            image,
+                            osType,
+                            imagePublisher,
+                            imageOffer,
+                            imageSku,
+                            imageVersion,
+                            agentLaunchMethod,
+                            initScript,
+                            credentialsId,
+                            virtualNetworkName,
+                            subnetName,
+                            usePrivateIP,
+                            retentionTimeInMin,
+                            jvmOptions});
 
             // First validate the subscription info.  If it is not correct,
-            // then we can't validate the 
-            String result = AzureVMManagementServiceDelegate.verifyConfiguration(servicePrincipal, resourceGroupName, 
+            // then we can't validate the
+            String result = AzureVMManagementServiceDelegate.verifyConfiguration(servicePrincipal, resourceGroupName,
                     maxVirtualMachinesLimit, deploymentTimeout);
             if (!result.equals(Constants.OP_SUCCESS)) {
                 return FormValidation.error(result);
@@ -827,25 +867,32 @@ public class AzureVMAgentTemplate implements Describable<AzureVMAgentTemplate> {
         }
     }
 
-    public void setVirtualMachineDetails(final AzureVMAgent agent) throws Exception {
+    public final void setVirtualMachineDetails(final AzureVMAgent agent) throws Exception {
         AzureVMManagementServiceDelegate.setVirtualMachineDetails(agent, this);
     }
 
-    public static String generateUniqueStorageAccountName(final String resourceGroupName, final ServicePrincipal servicePrincipal) {
+    private static final int STORAGE_ACCOUNT_MAX_NAME_LENGTH = 24;
+
+    public static String generateUniqueStorageAccountName(
+            final String resourceGroupName,
+            final ServicePrincipal servicePrincipal) {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
-            if (null != servicePrincipal && !StringUtils.isEmpty(servicePrincipal.getSubscriptionId()))
+            if (null != servicePrincipal && !StringUtils.isEmpty(servicePrincipal.getSubscriptionId())) {
                 md.update(servicePrincipal.getSubscriptionId().getBytes("UTF-8"));
-            if (null != resourceGroupName)
+            }
+            if (null != resourceGroupName) {
                 md.update(resourceGroupName.getBytes("UTF-8"));
+            }
 
             String uid = DatatypeConverter.printBase64Binary(md.digest());
-            uid = uid.substring(0, 22);
+            uid = uid.substring(0, STORAGE_ACCOUNT_MAX_NAME_LENGTH - 2);
             uid = uid.toLowerCase();
-            uid = uid.replaceAll("[^a-z0-9]","a");
+            uid = uid.replaceAll("[^a-z0-9]", "a");
             return "jn" + uid;
         } catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
-            LOGGER.log(Level.WARNING, "Could not genetare UID from the resource group name. Will fallback on using the resource group name.", e);
+            LOGGER.log(Level.WARNING, "Could not generate UID from the resource group name. "
+                    + "Will fallback on using the resource group name.", e);
             return "";
         }
     }

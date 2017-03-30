@@ -1,12 +1,12 @@
 /*
  Copyright 2016 Microsoft, Inc.
- 
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
- 
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,7 +52,7 @@ public class AzureVMAgent extends AbstractCloudSlave {
 
     private final String azureCredentialsId;
 
-    private transient final AzureCredentials.ServicePrincipal credentials;
+    private final transient AzureCredentials.ServicePrincipal credentials;
 
     private final String sshPrivateKey;
 
@@ -131,7 +131,8 @@ public class AzureVMAgent extends AbstractCloudSlave {
             final boolean executeInitScriptAsRoot,
             final boolean doNotUseMachineIfInitFails) throws FormException, IOException {
 
-        super(name, nodeDescription, remoteFS, numExecutors, mode, label, launcher, retentionStrategy, nodeProperties);
+        super(name, nodeDescription, remoteFS, numExecutors, mode, label, launcher,
+                retentionStrategy, nodeProperties);
 
         this.cloudName = cloudName;
         this.templateName = templateName;
@@ -192,8 +193,7 @@ public class AzureVMAgent extends AbstractCloudSlave {
                 numExecutors,
                 mode,
                 label,
-                agentLaunchMethod.equalsIgnoreCase("SSH") ?
-                        new AzureVMAgentSSHLauncher() : new JNLPLauncher(),
+                getLauncher(agentLaunchMethod),
                 new AzureVMCloudRetensionStrategy(retentionTimeInMin),
                 Collections.<NodeProperty<?>>emptyList(),
                 cloudName,
@@ -216,76 +216,85 @@ public class AzureVMAgent extends AbstractCloudSlave {
                 doNotUseMachineIfInitFails);
     }
 
-    public String getCloudName() {
+    private static ComputerLauncher getLauncher(final String launchMethod) {
+        if (launchMethod.equalsIgnoreCase("SSH")) {
+            return new AzureVMAgentSSHLauncher();
+        } else {
+            return new JNLPLauncher();
+        }
+    }
+
+    public final String getCloudName() {
         return cloudName;
     }
 
     @Override
-    public Mode getMode() {
+    public final Mode getMode() {
         return mode;
     }
 
-    public String getVMCredentialsId() {
+    public final String getVMCredentialsId() {
         return vmCredentialsId;
     }
 
-    public AzureCredentials.ServicePrincipal getServicePrincipal() {
-        if (credentials == null && azureCredentialsId != null)
+    public final AzureCredentials.ServicePrincipal getServicePrincipal() {
+        if (credentials == null && azureCredentialsId != null) {
             return AzureCredentials.getServicePrincipal(azureCredentialsId);
+        }
         return credentials;
     }
 
-    public String getSshPrivateKey() {
+    public final String getSshPrivateKey() {
         return sshPrivateKey;
     }
 
-    public OperatingSystemTypes getOsType() {
+    public final OperatingSystemTypes getOsType() {
         return osType;
     }
 
-    public String getSshPassPhrase() {
+    public final String getSshPassPhrase() {
         return sshPassPhrase;
     }
 
-    public String getDeploymentName() {
+    public final String getDeploymentName() {
         return deploymentName;
     }
 
-    public CleanUpAction getCleanUpAction() {
+    public final CleanUpAction getCleanUpAction() {
         return cleanUpAction;
     }
 
-    public Localizable getCleanUpReason() {
+    public final Localizable getCleanUpReason() {
         return cleanUpReason;
     }
 
     /**
      * @param cleanUpReason
      */
-    private void setCleanUpAction(CleanUpAction cleanUpAction) {
+    private void setCleanUpAction(final CleanUpAction cleanUpAction) {
         // Translate a default cleanup action into what we want for a particular
         // node
-        if (cleanUpAction == CleanUpAction.DEFAULT) {
+        this.cleanUpAction = cleanUpAction;
+        if (this.cleanUpAction == CleanUpAction.DEFAULT) {
             if (isShutdownOnIdle()) {
-                cleanUpAction = CleanUpAction.SHUTDOWN;
+                this.cleanUpAction = CleanUpAction.SHUTDOWN;
             } else {
-                cleanUpAction = CleanUpAction.DELETE;
+                this.cleanUpAction = CleanUpAction.DELETE;
             }
         }
-        this.cleanUpAction = cleanUpAction;
     }
 
     /**
      * @param cleanUpReason
      */
-    private void setCleanupReason(Localizable cleanUpReason) {
-        this.cleanUpReason = cleanUpReason;
+    private void setCleanupReason(final Localizable reason) {
+        this.cleanUpReason = reason;
     }
 
     /**
      * Clear the cleanup action and reset to the default behavior
      */
-    public void clearCleanUpAction() {
+    public final void clearCleanUpAction() {
         setCleanUpAction(CleanUpAction.DEFAULT);
         setCleanupReason(null);
     }
@@ -293,18 +302,19 @@ public class AzureVMAgent extends AbstractCloudSlave {
     /**
      * Block any cleanup from happening
      */
-    public void blockCleanUpAction() {
+    public final void blockCleanUpAction() {
         setCleanUpAction(CleanUpAction.BLOCK);
         setCleanupReason(null);
     }
 
-    public boolean isCleanUpBlocked() {
+    public final boolean isCleanUpBlocked() {
         return getCleanUpAction() == CleanUpAction.BLOCK;
     }
 
-    public void setCleanUpAction(CleanUpAction cleanUpAction, Localizable cleanUpReason) {
-        if (cleanUpAction != CleanUpAction.DELETE && cleanUpAction != CleanUpAction.SHUTDOWN) {
-            throw new IllegalStateException("Only use this method to set explicit cleanup operations");
+    public final void setCleanUpAction(final CleanUpAction action, final Localizable reason) {
+        if (action != CleanUpAction.DELETE && action != CleanUpAction.SHUTDOWN) {
+            throw new IllegalStateException(
+                    "Only use this method to set explicit cleanup operations");
         }
         AzureVMComputer computer = (AzureVMComputer) this.toComputer();
         if (computer != null) {
@@ -313,111 +323,112 @@ public class AzureVMAgent extends AbstractCloudSlave {
             // Reset the "by user" bit.
             computer.setSetOfflineByUser(false);
         }
-        setCleanUpAction(cleanUpAction);
-        setCleanupReason(cleanUpReason);
+        setCleanUpAction(action);
+        setCleanupReason(reason);
     }
 
-    public String getJvmOptions() {
+    public final String getJvmOptions() {
         return jvmOptions;
     }
 
-    public boolean isShutdownOnIdle() {
+    public final boolean isShutdownOnIdle() {
         return shutdownOnIdle;
     }
 
-    public void setShutdownOnIdle(boolean shutdownOnIdle) {
+    public final void setShutdownOnIdle(final boolean shutdownOnIdle) {
         this.shutdownOnIdle = shutdownOnIdle;
     }
 
-    public boolean isEligibleForReuse() {
+    public final boolean isEligibleForReuse() {
         return eligibleForReuse;
     }
 
-    public void setEligibleForReuse(boolean eligibleForReuse) {
+    public final void setEligibleForReuse(final boolean eligibleForReuse) {
         this.eligibleForReuse = eligibleForReuse;
     }
 
-    public String getPublicDNSName() {
+    public final String getPublicDNSName() {
         return publicDNSName;
     }
 
-    public void setPublicDNSName(String publicDNSName) {
+    public final void setPublicDNSName(final String publicDNSName) {
         this.publicDNSName = publicDNSName;
     }
 
-    public int getSshPort() {
+    public final int getSshPort() {
         return sshPort;
     }
 
-    public void setSshPort(int sshPort) {
+    public final void setSshPort(final int sshPort) {
         this.sshPort = sshPort;
     }
 
-    public String getPublicIP() {
+    public final String getPublicIP() {
         return publicIP;
     }
 
-    public void setPublicIP(final String publicIP) {
+    public final void setPublicIP(final String publicIP) {
         this.publicIP = publicIP;
     }
 
-    public String getPrivateIP() {
+    public final String getPrivateIP() {
         return privateIP;
     }
 
-    public void setPrivateIP(final String privateIP) {
+    public final void setPrivateIP(final String privateIP) {
         this.privateIP = privateIP;
     }
 
-    public int getRetentionTimeInMin() {
+    public final int getRetentionTimeInMin() {
         return retentionTimeInMin;
     }
 
-    public String getInitScript() {
+    public final String getInitScript() {
         return initScript;
     }
 
-    public String getAgentLaunchMethod() {
+    public final String getAgentLaunchMethod() {
         return agentLaunchMethod;
     }
 
-    public String getTemplateName() {
+    public final String getTemplateName() {
         return templateName;
     }
 
-    public void setTemplateName(String templateName) {
+    public final void setTemplateName(final String templateName) {
         this.templateName = templateName;
     }
 
-    public String getResourceGroupName() {
+    public final String getResourceGroupName() {
         return resourceGroupName;
     }
 
-    public boolean getExecuteInitScriptAsRoot() {
+    public final boolean getExecuteInitScriptAsRoot() {
         return executeInitScriptAsRoot;
     }
 
-    public boolean getDoNotUseMachineIfInitFails() {
+    public final boolean getDoNotUseMachineIfInitFails() {
         return doNotUseMachineIfInitFails;
     }
 
     @Override
-    protected void _terminate(final TaskListener arg0) throws IOException, InterruptedException {
-        //TODO: Check when this method is getting called and code accordingly
+    protected final void _terminate(final TaskListener arg0)
+            throws IOException, InterruptedException {
         LOGGER.log(Level.INFO, "AzureVMAgent: _terminate: called for agent {0}", getNodeName());
     }
 
     @Override
-    public AbstractCloudComputer<AzureVMAgent> createComputer() {
-        LOGGER.log(Level.INFO, "AzureVMAgent: createComputer: start for agent {0}", this.getDisplayName());
+    public final AbstractCloudComputer<AzureVMAgent> createComputer() {
+        LOGGER.log(Level.INFO, "AzureVMAgent: createComputer: start for agent {0}",
+                this.getDisplayName());
         return new AzureVMComputer(this);
     }
 
-    public AzureVMCloud getCloud() {
+    public final AzureVMCloud getCloud() {
         return (AzureVMCloud) Jenkins.getInstance().getCloud(cloudName);
     }
 
-    public void shutdown(Localizable reason) {
+    public final void shutdown(final Localizable reason) {
         LOGGER.log(Level.INFO, "AzureVMAgent: shutdown: shutting down agent {0}", this.
                 getDisplayName());
         this.getComputer().setAcceptingTasks(false);
@@ -433,12 +444,14 @@ public class AzureVMAgent extends AbstractCloudSlave {
      *
      * @throws Exception
      */
-    public void deprovision(Localizable reason) throws Exception {
-        LOGGER.log(Level.INFO, "AzureVMAgent: deprovision: Deprovision called for agent {0}", this.getDisplayName());
+    public final void deprovision(final Localizable reason) throws Exception {
+        LOGGER.log(Level.INFO, "AzureVMAgent: deprovision: Deprovision called for agent {0}",
+                this.getDisplayName());
         this.getComputer().setAcceptingTasks(false);
         this.getComputer().disconnect(OfflineCause.create(reason));
         AzureVMManagementServiceDelegate.terminateVirtualMachine(this);
-        LOGGER.log(Level.INFO, "AzureVMAgent: deprovision: {0} has been deprovisioned. Remove node ...",
+        LOGGER.log(Level.INFO,
+                "AzureVMAgent: deprovision: {0} has been deprovisioned. Remove node ...",
                 this.getDisplayName());
         // Adjust parent VM count up by one.
         AzureVMCloud parentCloud = getCloud();
@@ -449,13 +462,13 @@ public class AzureVMAgent extends AbstractCloudSlave {
         Jenkins.getInstance().removeNode(this);
     }
 
-    public boolean isVMAliveOrHealthy() throws Exception {
+    public final boolean isVMAliveOrHealthy() throws Exception {
         return AzureVMManagementServiceDelegate.isVMAliveOrHealthy(this);
     }
 
     private final Object publicIPAttachLock = new Object();
 
-    public String attachPublicIP() {
+    public final String attachPublicIP() {
         if (!publicIP.isEmpty()) {
             return publicIP;
         }
@@ -463,18 +476,20 @@ public class AzureVMAgent extends AbstractCloudSlave {
         // because of that we can just wait here until we have a public IP
         synchronized (publicIPAttachLock) {
             try {
-                AzureVMCloud azureVMCloud = (AzureVMCloud) Jenkins.getInstance().getCloud(cloudName);
-                AzureVMManagementServiceDelegate.attachPublicIP(this, azureVMCloud.getAzureAgentTemplate(templateName));
+                AzureVMManagementServiceDelegate.attachPublicIP(
+                        this,
+                        azureVMCloud.getAzureAgentTemplate(templateName));
             } catch (Exception e) {
                 LOGGER.log(Level.INFO,
-                        "AzureVMAgent: error while trying to attach a public IP to {0} : {1}", new Object[]{getNodeName(), e});
+                        "AzureVMAgent: error while trying to attach a public IP to {0} : {1}",
+                        new Object[]{getNodeName(), e});
             }
             return publicIP;
         }
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "AzureVMAgent ["
                 + "\n\tcloudName=" + cloudName
                 + "\n\tVMCredentialsId=" + vmCredentialsId
@@ -508,7 +523,7 @@ public class AzureVMAgent extends AbstractCloudSlave {
         }
 
         //abusing a bit of f:validateButton because it has nice progress
-        public FormValidation doAttachPublicIP(@QueryParameter String vmAgentName) {
+        public FormValidation doAttachPublicIP(@QueryParameter final String vmAgentName) {
             AzureVMAgent vmAgent = (AzureVMAgent) Jenkins.getInstance().getNode(vmAgentName);
             String publicIP = "";
             if (vmAgent != null) {
@@ -518,7 +533,8 @@ public class AzureVMAgent extends AbstractCloudSlave {
             if (publicIP.isEmpty()) {
                 return FormValidation.error(Messages.Azure_VM_Agent_Attach_Public_IP_Failure());
             } else {
-                return FormValidation.ok(Messages.Azure_VM_Agent_Attach_Public_IP_Success() + " ( " + publicIP + " ) ");
+                return FormValidation.ok(Messages.Azure_VM_Agent_Attach_Public_IP_Success()
+                        + " ( " + publicIP + " ) ");
             }
         }
     }

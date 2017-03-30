@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.microsoft.azure.vmagent.test;
 
 import com.microsoft.azure.PagedList;
@@ -46,7 +45,7 @@ public class ITAzureVMAgentCleanUpTask extends IntegrationTest {
 
     @Test
     public void cleanDeploymentsTest() {
-        try{
+        try {
             final AzureVMDeploymentInfo deploymentInfo = createDefaultDeployment(1, null);
             final String cloudName = "fake_cloud_name";
             final DeploymentRegistrar deploymentRegistrar = new DeploymentRegistrar();
@@ -59,12 +58,12 @@ public class ITAzureVMAgentCleanUpTask extends IntegrationTest {
             doNothing().when(cleanUpMock).execute(any(TaskListener.class));
             when(cloudMock.getServicePrincipal()).thenReturn(servicePrincipal);
 
-            cleanUpMock.cleanDeployments(60 * 24,-1); // should be a no-op, the timeout is 1 day
+            cleanUpMock.cleanDeployments(60 * 24, -1); // should be a no-op, the timeout is 1 day
             Assert.assertNotNull(customTokenCache.getAzureClient().deployments().getByGroup(testEnv.azureResourceGroup, deploymentInfo.getDeploymentName()));
 
-            cleanUpMock.cleanDeployments(-1,-1); // should delete all deployments
+            cleanUpMock.cleanDeployments(-1, -1); // should delete all deployments
             try {
-                Thread.sleep(10* 1000); // give time for azure to realize that the deployment was deleted
+                Thread.sleep(10 * 1000); // give time for azure to realize that the deployment was deleted
                 Assert.assertNull(customTokenCache.getAzureClient().deployments().getByGroup(testEnv.azureResourceGroup, deploymentInfo.getDeploymentName()));
             } catch (Exception e) {
                 Assert.assertTrue(true);
@@ -133,18 +132,18 @@ public class ITAzureVMAgentCleanUpTask extends IntegrationTest {
 
             cleanUpTask.cleanLeakedResources(testEnv.azureResourceGroup, servicePrincipal, cloudName, deploymentRegistrarMock_matching); //should remove second deployment
 
-            Thread.sleep(20* 1000); // give time for azure to realize that some resources are missing
+            Thread.sleep(20 * 1000); // give time for azure to realize that some resources are missing
             StorageAccount jenkinsStorage = null;
             PagedList<GenericResource> resources = customTokenCache.getAzureClient().genericResources().listByGroup(testEnv.azureResourceGroup);
             for (GenericResource resource : resources) {
                 if (StringUtils.containsIgnoreCase(resource.type(), "storageAccounts")) {
                     jenkinsStorage = customTokenCache.getAzureClient().storageAccounts().getById(resource.id());
                 }
-                if (resource.tags().get(Constants.AZURE_RESOURCES_TAG_NAME) != null &&
-                        matchingTagValue.matches(new AzureUtil.DeploymentTag(resource.tags().get(Constants.AZURE_RESOURCES_TAG_NAME)))) {
+                if (resource.tags().get(Constants.AZURE_RESOURCES_TAG_NAME) != null
+                        && matchingTagValue.matches(new AzureUtil.DeploymentTag(resource.tags().get(Constants.AZURE_RESOURCES_TAG_NAME)))) {
                     String resourceName = resource.name();
                     String depl = deployment.getVmBaseName() + "0";
-                    Assert.assertTrue("Resource shouldn't exist: " + resourceName +" (vmbase: " + depl + " )",resourceName.contains(depl));
+                    Assert.assertTrue("Resource shouldn't exist: " + resourceName + " (vmbase: " + depl + " )", resourceName.contains(depl));
                 }
             }
 
@@ -157,7 +156,7 @@ public class ITAzureVMAgentCleanUpTask extends IntegrationTest {
             Assert.assertTrue(container.exists());
             for (ListBlobItem blob : container.listBlobs()) {
                 final String u = blob.getUri().toString();
-                Assert.assertTrue("Blobl shouldn't exist: " + u ,u.contains(deployment.getVmBaseName() + "0"));
+                Assert.assertTrue("Blobl shouldn't exist: " + u, u.contains(deployment.getVmBaseName() + "0"));
             }
 
         } catch (Exception e) {

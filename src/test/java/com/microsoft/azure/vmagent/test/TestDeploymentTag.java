@@ -13,20 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.microsoft.azure.vmagent.test;
 
 import com.microsoft.azure.vmagent.util.AzureUtil;
-import org.jvnet.hudson.test.JenkinsRule;
 import jenkins.model.Jenkins;
 import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 
+public class TestDeploymentTag extends AzureUtil.DeploymentTag {
 
-public class TestDeploymentTag extends AzureUtil.DeploymentTag{
-    @ClassRule public static JenkinsRule j = new JenkinsRule();
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
 
     private String jenkinsId = "";
 
@@ -74,16 +74,17 @@ public class TestDeploymentTag extends AzureUtil.DeploymentTag{
         Assert.assertTrue(tag(1).matches(tag(0), 0));
         Assert.assertTrue(tag(15).matches(tag(100), 20));
         Assert.assertTrue(tag(100).matches(tag(15), 20));
-        Assert.assertTrue(tag(15).matches( new AzureUtil.DeploymentTag(jenkinsId + "/100"), 20));
+        Assert.assertTrue(tag(15).matches(new AzureUtil.DeploymentTag(jenkinsId + "/100"), 20));
         Assert.assertFalse(tag(0).matches(tag(1), 1));
         Assert.assertFalse(tag(1).matches(tag(0), 1));
         Assert.assertFalse(tag(100).matches(tag(450), 999));
         Assert.assertFalse(tag(450).matches(tag(100), 999));
-        Assert.assertFalse(tag(15).matches( new AzureUtil.DeploymentTag("wrong_id/100"), 20));
-        
+        Assert.assertFalse(tag(15).matches(new AzureUtil.DeploymentTag("wrong_id/100"), 20));
+
     }
-    
+
     private AzureUtil.DeploymentTag tag(long timestamp) {
-        return new AzureUtil.DeploymentTag(timestamp){};
+        return new AzureUtil.DeploymentTag(timestamp) {
+        };
     }
 }
